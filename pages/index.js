@@ -1,11 +1,33 @@
-import Link from 'next/link';
 import Layout from '@/components/layout';
+import EventItem from '@/components/EventItem';
+import { API_URL } from '@/config/index';
+import Link from 'next/link';
 
-export default function Home() {
+export default function Home({ events }) {
   return (
     <Layout>
-      <h1>There is no place like home</h1>
-      <Link href='/about'>About page</Link>
+      <h1>Up Coming Events</h1>
+      {events.length === 0 && <h3>There is no Event</h3>}
+
+      {events.map((evt) => (
+        <EventItem key={evt.id} evt={evt} />
+      ))}
+
+      {events.length > 0 && (
+        <Link href='/events'>
+          <a className='btn-secondary'> view all Event</a>
+        </Link>
+      )}
     </Layout>
   );
+}
+
+export async function getStaticProps() {
+  const reg = await fetch(`${API_URL}/api/events`);
+  const events = await reg.json();
+
+  return {
+    props: { events: events.events.slice(0, 3) },
+    revalidate: 1,
+  };
 }
