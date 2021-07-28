@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '@/components/layout';
 import Modal from '@/components/Modal';
+import ImageUpload from '@/components/ImageUpload';
 import { API_URL } from '@/config/index';
 import Image from 'next/image';
 import styles from '@/styles/Form.module.css';
@@ -29,6 +30,13 @@ export default function EditEventsPage({ evt }) {
   const [imagePreview, setImagePreview] = useState(
     evt.image ? evt.image.formats.thumbnail.url : null
   );
+
+  const imageUploaded = async (e) => {
+    const res = await fetch(`${API_URL}/events/${evt.id}`);
+    const data = await res.json();
+    setImagePreview(data.image.formats.thumbnail.url);
+    setShowModal(false);
+  };
 
   const router = useRouter();
 
@@ -162,7 +170,7 @@ export default function EditEventsPage({ evt }) {
       </div>
 
       <Modal show={showModal} onClose={() => setShowModal(false)}>
-        IMAGE UPLOAD
+        <ImageUpload evtId={evt.id} imageUploaded={imageUploaded} />
       </Modal>
     </Layout>
   );
