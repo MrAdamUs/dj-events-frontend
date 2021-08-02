@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { FaUser } from 'react-icons/fa';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
 
   const { register, error } = useContext(AuthContext);
+  useEffect(() => error && toast.error(error));
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -68,7 +70,7 @@ export default function RegisterPage() {
               onChange={(e) => setPasswordConfirm(e.target.value)}
             />
           </div>
-          <input type='submit' value='login' className='btn' />
+          <input type='submit' value='Register' className='btn' />
         </form>
         <p>
           Already have an account? <Link href='/account/login'>Login</Link>
