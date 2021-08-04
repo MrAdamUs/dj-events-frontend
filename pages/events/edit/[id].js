@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { parseCookies } from '@/helpers/index';
 import { FaImage } from 'react-icons/fa';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
@@ -13,7 +14,7 @@ import styles from '@/styles/Form.module.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export default function EditEventsPage({ evt }) {
+export default function EditEventsPage({ evt, token }) {
   console.log(evt);
   const [values, setValues] = useState({
     name: evt.name,
@@ -55,11 +56,16 @@ export default function EditEventsPage({ evt }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(values),
       });
 
       if (!res.ok) {
+        if (res.status === 403 || res.status === 401) {
+          toast.error('Unauthorized');
+          return;
+        }
         toast.error('Somthing Went Wrong');
       } else {
         const evt = await res.json();
@@ -177,12 +183,15 @@ export default function EditEventsPage({ evt }) {
 }
 
 export async function getServerSideProps({ params: { id }, req }) {
+  const { token } = parseCookies(req);
+
   const res = await fetch(`${API_URL}/events/${id}`);
   const evt = await res.json();
-  console.log(req.headers.cookie);
+
   return {
     props: {
       evt,
+      token,
     },
   };
 }

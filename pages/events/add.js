@@ -1,14 +1,14 @@
+import { parseCookies } from '@/helpers/index';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import Layout from '@/components/layout';
+import Layout from '@/components/Layout';
 import { API_URL } from '@/config/index';
 import styles from '@/styles/Form.module.css';
 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-function AddEventsPage() {
+export default function AddEventPage({ token }) {
   const [values, setValues] = useState({
     name: '',
     performers: '',
@@ -21,7 +21,7 @@ function AddEventsPage() {
 
   const router = useRouter();
 
-  const handelSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
@@ -30,22 +30,27 @@ function AddEventsPage() {
     );
 
     if (hasEmptyFields) {
-      toast.error('Pleas fill in  all field');
-    } else {
-      const res = await fetch(`${API_URL}/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
+      toast.error('Please fill in all fields');
+    }
 
-      if (!res.ok) {
-        toast.error('Somthing Went Wrong');
-      } else {
-        const evt = await res.json();
-        router.push(`/events/${evt.slug}`);
+    const res = await fetch(`${API_URL}/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 401) {
+        toast.error('No token included');
+        return;
       }
+      toast.error('Something Went Wrong');
+    } else {
+      const evt = await res.json();
+      router.push(`/events/${evt.slug}`);
     }
   };
 
@@ -53,12 +58,13 @@ function AddEventsPage() {
     const { name, value } = e.target;
     setValues({ ...values, [name]: value });
   };
+
   return (
     <Layout title='Add New Event'>
       <Link href='/events'>Go Back</Link>
       <h1>Add Event</h1>
       <ToastContainer />
-      <form onSubmit={handelSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.grid}>
           <div>
             <label htmlFor='name'>Event Name</label>
@@ -121,6 +127,7 @@ function AddEventsPage() {
             />
           </div>
         </div>
+
         <div>
           <label htmlFor='description'>Event Description</label>
           <textarea
@@ -138,4 +145,12 @@ function AddEventsPage() {
   );
 }
 
-export default AddEventsPage;
+export async function getServerSideProps({ req }) {
+  const { token } = parseCookies(req);
+
+  return {
+    props: {
+      token,
+    },
+  };
+}
